@@ -28,9 +28,9 @@ async function run() {
 
     const database = client.db('BlogSphereDB');
     const blogsCollection = database.collection('blogs');
-    const commentsCollection = db.collection('comments');
+    const commentsCollection = database.collection('comments');
     const myCollection = database.collection('myblogs');
-    const watchlistCollection = database.collection('watchlist');
+    const wishlistCollection = database.collection('wishlist');
 
     // -------------------- CRUD Operations for `blogs` --------------------
     app.get('/blogs', async (req, res) => {
@@ -166,8 +166,8 @@ async function run() {
         : res.status(404).json({ error: 'blog not found' });
     });
 
-    // -------------------- Watchlist Feature --------------------
-    app.get('/watchlist', async (req, res) => {
+    // -------------------- wishlist Feature --------------------
+    app.get('/wishlist', async (req, res) => {
       const userEmail = req.query.userEmail;
 
       if (!userEmail) {
@@ -175,46 +175,50 @@ async function run() {
       }
 
       try {
-        const watchlistItems = await watchlistCollection.find({ userEmail }).toArray();
-        res.json(watchlistItems);
+        const wishlistItems = await wishlistCollection.find({ userEmail }).toArray();
+        res.json(wishlistItems);
       } catch (error) {
-        console.error("Error fetching watchlist:", error);
-        res.status(500).json({ error: "Failed to fetch watchlist." });
+        console.error("Error fetching wishlist:", error);
+        res.status(500).json({ error: "Failed to fetch wishlist." });
       }
     });
 
-    app.post('/watchlist/add', async (req, res) => {
-      const { userEmail, blogId, gameTitle, gameCover, blogDescription, category, userName } = req.body;
-
+    app.post('/wishlist/add', async (req, res) => {
+      const { userEmail, blogId, title, image, shortDescription, category, author, userName } = req.body;
+      
+      console.log('Received data:', req.body); // Debugging log
+    
       if (!userEmail || !userName || !blogId) {
         return res.status(400).json({ error: "Missing required fields." });
       }
-
-      const existingItem = await watchlistCollection.findOne({ userEmail, blogId });
-      if (existingItem) {
-        return res.status(400).json({ error: "This blog is already in your watchlist." });
-      }
-
-      const newWatchlistItem = {
-        blogId,
-        gameTitle,
-        gameCover,
-        blogDescription,
-        category,
-        userEmail,
-        userName,
-        addedAt: new Date(),
-      };
-
+    
       try {
-        const result = await watchlistCollection.insertOne(newWatchlistItem);
-        res.json({ message: "blog added to watchlist", result });
+        const existingItem = await wishlistCollection.findOne({ userEmail, blogId });
+        if (existingItem) {
+          return res.status(400).json({ error: "This blog is already in your wishlist." });
+        }
+    
+        const newWishlistItem = {
+          blogId,
+          title,
+          image,
+          shortDescription,
+          category,
+          author,
+          userEmail,
+          userName,
+          addedAt: new Date(),
+        };
+    
+        const result = await wishlistCollection.insertOne(newWishlistItem);
+        res.json({ message: "Blog added to wishlist", result });
       } catch (error) {
-        console.error("Error adding to watchlist:", error);
-        res.status(500).json({ error: "Failed to add to watchlist." });
+        console.error("Error adding to wishlist:", error);
+        res.status(500).json({ error: "Failed to add to wishlist." });
       }
     });
-
+    
+    
   } finally {
     // Ensure that the client will close when you finish/error
     // await client.close();
