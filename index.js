@@ -120,52 +120,6 @@ async function run() {
     }
     });
 
-
-    // -------------------- CRUD Operations for `myblogs` --------------------
-    app.get('/myblogs', async (req, res) => {
-      const blogs = await myCollection.find().toArray();
-      res.json(blogs);
-    });
-
-    app.get('/myblogs/:id', async (req, res) => {
-      const id = req.params.id;
-      const blog = await myCollection.findOne({ _id: new ObjectId(id) });
-      blog ? res.json(blog) : res.status(404).json({ error: 'blog not found' });
-    });
-
-    app.post('/myblogs/add', async (req, res) => {
-      const newBlog = req.body;
-      const result = await myCollection.insertOne(newBlog);
-      res.json(result);
-    });
-
-    app.put('/myblogs/update/:id', async (req, res) => {
-      const id = req.params.id;
-      const updatedData = req.body;
-      delete updatedData._id;
-
-      try {
-        const result = await myCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { $set: updatedData }
-        );
-        result.matchedCount > 0
-          ? res.json({ message: 'blog updated successfully' })
-          : res.status(404).json({ error: 'blog not found' });
-      } catch (error) {
-        console.error('Error updating blog:', error);
-        res.status(500).json({ error: 'An error occurred while updating the blog.' });
-      }
-    });
-
-    app.delete('/myblogs/delete/:id', async (req, res) => {
-      const id = req.params.id;
-      const result = await myCollection.deleteOne({ _id: new ObjectId(id) });
-      result.deletedCount > 0
-        ? res.json({ message: 'blog deleted successfully' })
-        : res.status(404).json({ error: 'blog not found' });
-    });
-
     // -------------------- wishlist Feature --------------------
     app.get('/wishlist', async (req, res) => {
       const userEmail = req.query.userEmail;
@@ -186,7 +140,7 @@ async function run() {
     app.post('/wishlist/add', async (req, res) => {
       const { userEmail, blogId, title, image, shortDescription, category, author, userName } = req.body;
       
-      console.log('Received data:', req.body); // Debugging log
+      console.log('Received data:', req.body); 
     
       if (!userEmail || !userName || !blogId) {
         return res.status(400).json({ error: "Missing required fields." });
@@ -217,6 +171,28 @@ async function run() {
         res.status(500).json({ error: "Failed to add to wishlist." });
       }
     });
+
+    app.delete('/wishlist/:blogId', async (req, res) => {
+      const { blogId } = req.params;
+      const { userEmail } = req.body;
+    
+      try {
+        const result = await wishlistCollection.deleteOne({
+          _id: new ObjectId(blogId),
+          userEmail,
+        });
+    
+        if (result.deletedCount === 1) {
+          res.json({ message: "Blog removed from wishlist." });
+        } else {
+          res.status(404).json({ error: "Blog not found in wishlist." });
+        }
+      } catch (error) {
+        console.error("Error deleting wishlist item:", error);
+        res.status(500).json({ error: "Failed to delete wishlist item." });
+      }
+    });
+    
     
     
   } finally {
