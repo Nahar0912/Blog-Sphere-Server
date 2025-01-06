@@ -68,24 +68,27 @@ async function run() {
     app.put('/blogs/update/:id', async (req, res) => {
       const id = req.params.id;
       const updatedData = req.body;
-      const result = await blogsCollection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: updatedData }
-      );
-      result.matchedCount > 0
-        ? res.json({ message: 'blog updated successfully' })
-        : res.status(404).json({ error: 'blog not found' });
+    
+      try {
+        const { _id, ...dataToUpdate } = updatedData;
+    
+        const result = await blogsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: dataToUpdate }
+        );
+    
+        if (result.matchedCount > 0) {
+          res.json({ message: 'Blog updated successfully' });
+        } else {
+          res.status(404).json({ error: 'Blog not found' });
+        }
+      } catch (error) {
+        console.error('Error updating blog:', error);
+        res.status(500).json({ error: 'Failed to update blog' });
+      }
     });
-
-    app.delete('/blogs/delete/:id', async (req, res) => {
-      const id = req.params.id;
-      const result = await blogsCollection.deleteOne({ _id: new ObjectId(id) });
-      result.deletedCount > 0
-        ? res.json({ message: 'blog deleted successfully' })
-        : res.status(404).json({ error: 'blog not found' });
-    });
+ 
       
-
     // Fetch comments for a blog by blog ID
     app.get('/comments/:blogId', async (req, res) => {
     const { blogId } = req.params;
