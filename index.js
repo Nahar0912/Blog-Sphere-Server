@@ -29,7 +29,6 @@ async function run() {
     const database = client.db('BlogSphereDB');
     const blogsCollection = database.collection('blogs');
     const commentsCollection = database.collection('comments');
-    const myCollection = database.collection('myblogs');
     const wishlistCollection = database.collection('wishlist');
 
     // -------------------- CRUD Operations for `blogs` --------------------
