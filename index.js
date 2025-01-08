@@ -86,6 +86,14 @@ async function run() {
         res.status(500).json({ error: 'Failed to update blog' });
       }
     });
+
+    app.delete('/blogs/delete/:id', async (req, res) => {
+      const id = req.params.id;
+      const result = await blogsCollection.deleteOne({ _id: new ObjectId(id) });
+      result.deletedCount > 0
+        ? res.json({ message: 'blog deleted successfully' })
+        : res.status(404).json({ error: 'blog not found' });
+    });
  
       
     // Fetch comments for a blog by blog ID
